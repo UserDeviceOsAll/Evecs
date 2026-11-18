@@ -16,6 +16,7 @@ Run locally on Windows
 
 Prototype notes
 - The included event listings and student registrations are sample content for interaction testing, not confirmed university announcements.
+- The demo clock starts at 18 November 2026. On each new local calendar day, all event dates move forward by one day; reopening after several days catches the dates up automatically.
 - The app does not connect to LPU UMS or send real reminders, registrations or notifications.
 - Event edits are stored in the browser's local storage. Use the same browser to see saved changes.
 - To reset the prototype to its original sample content, clear local storage for this site in your browser.
