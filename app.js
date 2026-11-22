@@ -5,12 +5,8 @@
     reminders: "p17-campus-reminders-v1",
     interests: "p17-campus-interests-v1",
     updates: "p17-campus-updates-v1",
-    reminderOn: "p17-campus-reminder-setting-v1",
-    dateAdvance: "p17-campus-date-advance-v1"
+    reminderOn: "p17-campus-reminder-setting-v1"
   };
-  // Testing clock: 18 November 2026 is day zero. On each new local calendar
-  // day, every event date moves forward by the same number of days.
-  const DEMO_START_DATE = "2026-11-18";
   const seedEvents = [
     { id: "web-workshop", title: "Web Development Workshop", category: "Technical", date: "2026-11-18", time: "09:00", venue: "CSE Block", about: "A practical workshop exploring the basics of modern web development.", benefits: ["Workshop", "Build skills"], icon: "⌘", organizer: "School of Computing" },
     { id: "tech-talk", title: "Tech Talk 2026", category: "Technical", date: "2026-11-19", time: "17:00", venue: "LT-1", about: "An evening talk and discussion with a guest speaker from the technology industry.", benefits: ["Guest speaker", "Q&A"], icon: "⌘", organizer: "School of Computing" },
@@ -60,33 +56,7 @@
   const canManage = managerEnabled && managerMode;
 
   const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
-  const today = () => new Date(`${localIsoDate()}T00:00:00`);
-  const localIsoDate = (date = new Date()) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-  const daysBetween = (fromIso, toIso) => {
-    const from = new Date(`${fromIso}T00:00:00`);
-    const to = new Date(`${toIso}T00:00:00`);
-    return Math.max(0, Math.round((to - from) / 86400000));
-  };
-  const shiftIsoDate = (isoDate, days) => {
-    const shifted = new Date(`${isoDate}T00:00:00`);
-    shifted.setDate(shifted.getDate() + days);
-    return localIsoDate(shifted);
-  };
-  const advanceDemoDates = () => {
-    const currentDay = localIsoDate();
-    const lastAdvancedDay = localStorage.getItem(STORAGE.dateAdvance) || DEMO_START_DATE;
-    const days = daysBetween(lastAdvancedDay, currentDay);
-    if (days > 0) {
-      events = events.map(event => ({ ...event, date: shiftIsoDate(event.date, days) }));
-      write(STORAGE.events, events);
-    }
-    localStorage.setItem(STORAGE.dateAdvance, currentDay);
-  };
+  const today = () => new Date(new Date().toISOString().slice(0, 10) + "T00:00:00");
   const eventDate = event => new Date(`${event.date}T00:00:00`);
   const isPast = event => eventDate(event) < today();
   const dateBits = event => {
@@ -111,7 +81,6 @@
   const saveAll = () => {
     write(STORAGE.events, events); write(STORAGE.registrations, registrations); write(STORAGE.reminders, reminders);
     write(STORAGE.interests, interests); write(STORAGE.updates, updates); write(STORAGE.reminderOn, reminderOn);
-    localStorage.setItem(STORAGE.dateAdvance, localIsoDate());
   };
   const updateLog = (event, verb) => {
     updates.unshift({ id: `update-${Date.now()}`, eventId: event.id, title: `${event.title} ${verb}`, text: `${event.title}: ${event.date} at ${event.time} · ${event.venue}.`, type: "Event details", time: "Just now", read: false });
@@ -130,7 +99,6 @@
     events = read(STORAGE.events, seedEvents); registrations = read(STORAGE.registrations, seedRegistrations);
     reminders = read(STORAGE.reminders, seedReminders); interests = read(STORAGE.interests, ["Technical", "Cultural", "Sports"]);
     updates = read(STORAGE.updates, seedUpdates); reminderOn = read(STORAGE.reminderOn, true);
-    advanceDemoDates();
     let view = viewName();
     if (view === "event-manager" && !canManage) { location.hash = "dashboard"; view = "dashboard"; }
     const titles = { dashboard: "Dashboard", "for-you": "Personalized recommendations", "my-events": "My events", reminders: "Event reminders", "live-updates": "Real-time updates", categories: "Categories", "event-manager": "Manage events" };
@@ -251,7 +219,7 @@
     const target = event.target.closest("[data-view],[data-filter],[data-select-event],[data-action],[data-category],[data-my-tab],[data-global-menu]");
     if (!target) return;
     if (target.matches("a[href='#']")) event.preventDefault();
-    if (target.dataset.view) { event.preventDefault(); setView(target.dataset.view); closeMobileNav(); return; }
+    if (target.dataset.view) { event.preventDefault(); const focusList = /All events|Find an event|Open event list/i.test(target.textContent || ''); setView(target.dataset.view); if (focusList) setTimeout(()=>document.querySelector('.event-panel')?.scrollIntoView({behavior:'smooth',block:'start'}),120); closeMobileNav(); return; }
     if (target.dataset.globalMenu) {
       if (["Important Links","Quick Links"].includes(target.dataset.globalMenu)) {
         if (viewName() !== "dashboard") setView("dashboard");
@@ -262,7 +230,7 @@
     if (target.dataset.filter) { activeFilter = target.dataset.filter; render(); return; }
     if (target.dataset.selectEvent) { selectedEventId = target.dataset.selectEvent; render(); return; }
     if (target.dataset.myTab) { myEventsTab = target.dataset.myTab; render(); return; }
-    if (target.dataset.category) { activeFilter = target.dataset.category; setView("dashboard"); return; }
+    if (target.dataset.category) { activeFilter = target.dataset.category; setView("dashboard"); setTimeout(()=>document.querySelector('.event-panel')?.scrollIntoView({behavior:'smooth',block:'start'}),120); return; }
     const action = target.dataset.action; const id = target.dataset.id;
     if (action === "toggle-sidebar") { document.getElementById("sidebar").classList.toggle("open"); document.querySelector(".mobile-overlay")?.classList.toggle("show"); return; }
     if (action === "open-events") { setView("my-events"); return; }
