@@ -219,7 +219,7 @@
     const target = event.target.closest("[data-view],[data-filter],[data-select-event],[data-action],[data-category],[data-my-tab],[data-global-menu]");
     if (!target) return;
     if (target.matches("a[href='#']")) event.preventDefault();
-    if (target.dataset.view) { event.preventDefault(); const focusList = /All events|Find an event|Open event list/i.test(target.textContent || ''); setView(target.dataset.view); if (focusList) setTimeout(()=>document.querySelector('.event-panel')?.scrollIntoView({behavior:'smooth',block:'start'}),120); closeMobileNav(); return; }
+    if (target.dataset.view) { event.preventDefault(); const focusList = /All events|Find an event|Open event list/i.test(target.textContent || ''); if (focusList) activeFilter = "All Events"; setView(target.dataset.view); if (focusList) setTimeout(()=>document.querySelector('.event-panel')?.scrollIntoView({behavior:'smooth',block:'start'}),120); closeMobileNav(); return; }
     if (target.dataset.globalMenu) {
       if (["Important Links","Quick Links"].includes(target.dataset.globalMenu)) {
         if (viewName() !== "dashboard") setView("dashboard");
